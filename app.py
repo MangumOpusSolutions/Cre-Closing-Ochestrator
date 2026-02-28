@@ -44,10 +44,11 @@ def generate_objection_letter(findings, buyer_name):
     llm = ChatOpenAI(model="gpt-4o")
     # We use a placeholder [PROPERTY_ADDRESS] so we can swap it later
     prompt = f"""
-    Draft a formal CRE Objection Letter on behalf of {buyer_name}.
+    Draft a formal CRE Objection Letter for {property_address} on behalf of {buyer_name}.
     Property Address: [PROPERTY_ADDRESS]
-    Findings: {findings}.
-    Tone: Legal and firm. Include placeholders for [DATE] and [SELLER NAME].
+    Based on these findings: {findings}.
+    Tone: Sophisticated, Legal and firm. 
+    Include standard legal placeholders for [DATE] and [SELLER NAME].
     """
     return llm.invoke(prompt).content
 
@@ -123,9 +124,14 @@ if check_password():
         elif "[YELLOW]" in audit_res: st.warning(audit_res.replace("[YELLOW]", "🟡 NEGOTIABLE:"))
         else: st.success(audit_res.replace("[GREEN]", "🟢 CLEAR:"))
 
-        if st.button("📝 Generate Objection Letter"):
+       if st.button("📝 Generate Objection Letter"):
             with st.spinner("Drafting legal notice..."):
-                st.session_state['last_letter'] = generate_objection_letter(audit_res, prop_addr, buyer)
+                # We pass: 1. The Audit, 2. The Address, 3. The Buyer
+                st.session_state['last_letter'] = generate_objection_letter(
+                    st.session_state['last_audit'], 
+                    prop_addr, 
+                    buyer
+                )
 
     # PERSISTENT LETTER & DOWNLOAD DISPLAY
     if 'last_letter' in st.session_state:
@@ -170,5 +176,6 @@ if check_password():
 
     # The detailed legal disclaimer always shows at the bottom of the logged-in app
     display_disclaimer()
+
 
 
