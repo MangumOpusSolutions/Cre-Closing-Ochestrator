@@ -40,13 +40,14 @@ def display_disclaimer():
     )
 
 # --- 2. LOGIC FUNCTIONS ---
-def generate_objection_letter(findings, property_address, buyer_name):
+def generate_objection_letter(findings, buyer_name):
     llm = ChatOpenAI(model="gpt-4o")
+    # We use a placeholder [PROPERTY_ADDRESS] so we can swap it later
     prompt = f"""
-    Draft a formal CRE Objection Letter for {property_address} on behalf of {buyer_name}.
-    Based on these findings: {findings}.
-    Tone: Sophisticated, legal, and demanding a 'Cure' from the Seller. 
-    Include standard legal placeholders for [DATE] and [SELLER NAME].
+    Draft a formal CRE Objection Letter on behalf of {buyer_name}.
+    Property Address: [PROPERTY_ADDRESS]
+    Findings: {findings}.
+    Tone: Legal and firm. Include placeholders for [DATE] and [SELLER NAME].
     """
     return llm.invoke(prompt).content
 
@@ -130,11 +131,21 @@ if check_password():
     if 'last_letter' in st.session_state:
         st.divider()
         st.subheader("Draft Objection Letter")
-        # Update state if user edits the text area
-        st.session_state['last_letter'] = st.text_area("Legal Draft (Editable)", 
-                                                     value=st.session_state['last_letter'], 
-                                                     height=400)
-        
+
+        # GET THE CURRENT LETTER FROM STATE
+        current_letter = st.session_state['last_letter']
+
+        # DYNAMIC SWAP: Replace the placeholder with whatever is CURRENTLY in the sidebar
+        # This makes the letter respond to sidebar changes instantly!
+        display_letter = current_letter.replace("[PROPERTY_ADDRESS]", prop_addr)
+
+        # EDITABLE TEXT AREA
+        # We store the edited version back to session state
+        st.session_state['last_letter'] = st.text_area(
+            "Legal Draft (Editable)", 
+            value=display_letter, 
+            height=400
+        )
         # Prepare PDF
         pdf = CRE_PDF()
         pdf.add_page()
@@ -159,4 +170,5 @@ if check_password():
 
     # The detailed legal disclaimer always shows at the bottom of the logged-in app
     display_disclaimer()
+
 
