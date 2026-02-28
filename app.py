@@ -56,13 +56,26 @@ def check_password():
         st.title("🔐 CRE Agent Login")
         user_input = st.text_input("Username")
         pass_input = st.text_input("Password", type="password")
+        
         if st.button("Log In"):
-            # Local testing credentials
-            if user_input == "admin" and pass_input == "1234":
-                st.session_state["password_correct"] = True
-                st.rerun()
+            # This checks if the passwords section exists in secrets
+            if "passwords" in st.secrets:
+                # This checks if the username exists in that section
+                if user_input in st.secrets["passwords"]:
+                    # This checks if the password matches
+                    if pass_input == st.secrets["passwords"][user_input]:
+                        st.session_state["password_correct"] = True
+                        st.rerun()
+                    else:
+                        st.error("❌ Incorrect password.")
+                else:
+                    st.error("❌ Username not recognized.")
             else:
-                st.error("😕 User not found or password incorrect")
+                st.error("❌ Critical Error: Secrets file not found or '[passwords]' header missing.")
+            
+            # THE FORGOT PASSWORD HOOK
+            st.info("Forgot access? Contact: admin@yourdomain.com")
+            
         return False
     return True
 
@@ -146,3 +159,4 @@ if check_password():
 
     # The detailed legal disclaimer always shows at the bottom of the logged-in app
     display_disclaimer()
+
